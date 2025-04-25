@@ -331,7 +331,55 @@ Para testar a API, você pode usar:
    response = requests.post('http://127.0.0.1:8000/contatos', json=data)
    print(response.json())
    ```
+## 📊 Diagrama de Classes
 
+O sistema segue uma arquitetura bem definida, representada pelo seguinte diagrama de classes:
+
+![diagramaClasse_BRVANT](https://github.com/user-attachments/assets/ab2f0967-4cc8-47c1-a7ba-46584052a90f)
+
+### Descrição das Classes
+
+**1. Database**
+- Responsável pela conexão com o banco de dados
+- Fornece a engine e a sessão para acesso ao banco
+- Método `get_db()` retorna uma sessão ativa
+
+**2. CriacaoContato**
+- Modelo para criação de novos contatos
+- Contém apenas os campos necessários para criação (nome e telefone)
+- Utilizado como entrada nas operações de criação e atualização
+
+**3. Contato**
+- Modelo principal que representa um contato no banco de dados
+- Possui ID como chave primária, além de nome e telefone
+- É manipulado pelo ControlleContato
+
+**4. ContatoResponse**
+- DTO (Data Transfer Object) usado para retornar informações de contatos
+- Contém id, nome e telefone formatados para apresentação ao cliente
+- Retornado pelas operações de CRUD
+
+**5. ControlleContato**
+- Implementa a lógica de negócios para gerenciamento de contatos
+- Utiliza a sessão do banco de dados para operações de persistência
+- Oferece métodos para criar, buscar, atualizar e deletar contatos
+- Retorna objetos do tipo ContatoResponse
+
+**6. RotasContato**
+- Define os endpoints da API REST
+- Utiliza o ControlleContato para processar as requisições
+- Mapeia operações HTTP para os métodos do controller
+- Gerencia os códigos de status HTTP e formatação das respostas
+
+### Relações Principais
+
+- `RotasContato` usa `ControlleContato` para processar as requisições
+- `ControlleContato` usa `Database` para obter sessões do banco de dados
+- `ControlleContato` manipula objetos `Contato` no banco de dados
+- `ControlleContato` usa `CriacaoContato` como entrada para operações de criação/atualização
+- `ControlleContato` retorna objetos `ContatoResponse` como resultado das operações
+
+Esta arquitetura segue os princípios de separação de responsabilidades e permite uma manutenção mais fácil e escalabilidade do sistema.
 ---
 
 ## 📚 Referências Técnicas
@@ -350,18 +398,6 @@ Para testar a API, você pode usar:
 
 5. **Padrão MVC**
    - [Padrões de Arquitetura de Aplicações Corporativas](https://www.martinfowler.com/books/eaa.html)
-
-## 👥 Próximos Passos
-
-- Implementar autenticação de usuários
-- Adicionar mais campos aos contatos (email, endereço, etc.)
-- Implementar sistema de grupos de contatos
-- Adicionar testes automatizados (pytest)
-- Criar interface web com templates Jinja2
-- Implementar validações mais avançadas (formato de telefone, etc.)
-- Adicionar paginação para listagem de contatos
-- Implementar busca e filtros avançados
-- Desenvolver sistema de log para auditoria
 
 ---
 
