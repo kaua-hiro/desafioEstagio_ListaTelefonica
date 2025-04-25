@@ -1,120 +1,370 @@
-# Aula 1 FastAPI
-Instalando o Fastapi 
+# 🚀 Sistema de Gerenciamento de Contatos 
+
+## 🏗️ Arquitetura MVC
+
+## 📝 Relatório Técnico
+
+### 1. Arquitetura MVC Implementada
+
+O sistema foi desenvolvido seguindo o padrão **Model-View-Controller (MVC)**, com as seguintes características:
+
+**a) Camada Model (Models)**
+```python
+# user_model.py
+def inserir_contato(nome: str, numero_telefone:str)-> int:
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO lista_contatos (nome, numero_telefone) "
+    "VALUES (?, ?)", (nome, numero_telefone))
+    conn.commit()
+    last_id = cursor.lastrowid
+    conn.close()
+    return last_id
 ```
-pip install "fastapi[standard]"
+- Responsável pela interação com o banco SQLite
+- Define a estrutura de dados e operações CRUD
+- Implementa funções de busca e manipulação de registros
+- Retorna None quando um contato não é encontrado, exigindo verificação adequada
+
+**b) Camada Controller (Controllers)**
+```python
+# contatos_controllers.py
+async def cadastrar_contatos(nome: str, numero_telefone: str) -> dict:
+    try:
+        contato_id = user_model.inserir_contato(nome, numero_telefone)
+        return {"id": contato_id, "nome": nome, "numero_telefone": numero_telefone}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao cadastrar contato: {str(e)}")
 ```
-Criando um servidor fastapi simples Crie um arquivo main.py:
-Rodando o servidor 1ª forma
+- Gerencia a lógica de negócios
+- Realiza o tratamento de erros com try/except e HTTPException
+- Coordena a comunicação entre Models e rotas
+- Implementa diferentes status HTTP para cada tipo de resposta
+
+**c) Camada View (Templates)**
+- O sistema está configurado para suportar templates Jinja2
+- As importações para suporte a templates estão presentes (`Jinja2Templates(directory="templates")`)
+- Para completar esta camada, é necessário criar o diretório "templates" e adicionar os arquivos HTML/CSS
+
+### 2. Sistema de Validação e Tratamento de Erros
+
+Implementamos um sistema robusto de tratamento de erros:
+
+**a) Tratamento de Exceções**
+```python
+def buscar_contatos_por_id(contato_id: int) -> dict:
+    try:
+        contato = user_model.buscar_contatos_por_id(contato_id)
+        if contato is None:
+            raise HTTPException(status_code=404, detail="Contato não encontrado")
+        return contato
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar contato: {str(e)}")
 ```
-fastapi dev main.py
+
+**Respostas de Erro por Status Code:**
+- 404: Contato não encontrado
+- 500: Erros internos do servidor (problemas com banco de dados, etc.)
+
+**b) Validação de Dados com Pydantic**
+```python
+class Contato(BaseModel):
+    nome: str
+    numero_telefone: str
 ```
-Rodando o servidor 2ª forma
+
+### 3. Sistema de Rotas Modular
+
+As rotas foram implementadas com:
+
+**a) Organização Modular**
+```python
+# rotas.py
+router = APIRouter()
+
+@router.get("/contatos")
+def pagina_inicial():
+    return contatos_controllers.mostrar_contatos()
+
+@router.post("/contatos", status_code=201)
+async def cadastrar(contato: Contato):
+    return await contatos_controllers.cadastrar_contatos(
+        nome=contato.nome, 
+        numero_telefone=contato.numero_telefone
+    )
 ```
-python main.py
+
+**b) Endpoints Disponíveis**
+
+| Método | Endpoint | Descrição | Status Code Sucesso |
+|--------|----------|-----------|---------------------|
+| GET | `/contatos` | Lista todos os contatos | 200 |
+| GET | `/contatos/{contato_id}` | Busca contato por ID | 200 |
+| POST | `/contatos` | Cria novo contato | 201 |
+| PUT | `/contatos/update/{contato_id}` | Atualiza contato existente | 200 |
+| DELETE | `/contatos/delete/{contato_id}` | Remove contato | 200 |
+
+### 4. Exemplos de Uso da API
+
+**a) Listar Todos os Contatos**
+
+Resposta:
+```json
+[
+  {
+    "id": 1,
+    "nome": "João Silva",
+    "numero_telefone": "123456789"
+  },
+  {
+    "id": 2,
+    "nome": "Maria Souza",
+    "numero_telefone": "987654321"
+  }
+]
 ```
-Instalar a biblioteca:
+
+**b) Buscar Contato por ID**
+
+Resposta:
+```json
+{
+  "id": 1,
+  "nome": "João Silva",
+  "numero_telefone": "123456789"
+}
 ```
-pip install jinja2
+
+**c) Criar Novo Contato**
+
+Corpo da requisição:
+```json
+{
+  "nome": "Pedro Oliveira", 
+  "numero_telefone": "555666777"
+}
 ```
 
+Resposta:
+```json
+{
+  "id": 3,
+  "nome": "Pedro Oliveira",
+  "numero_telefone": "555666777"
+}
+```
 
-Lista Telefônica - API MVC com FastAPI Descrição do Projeto Este projeto implementa uma API de lista telefônica com operações CRUD (Create, Read, Update, Delete) utilizando a arquitetura MVC (Model-View-Controller). Desenvolvido como um desafio de estágio, o sistema permite gerenciar contatos telefônicos e está preparado para futuras implementações como cadastro de usuários, autenticação e controle de acesso. Tecnologias Utilizadas
+**d) Atualizar Contato**
 
-Python 3.6+ FastAPI SQLite Uvicorn (servidor ASGI) Pydantic (validação de dados)
+Corpo da requisição:
+```json
+{
+  "nome": "Pedro Silva", 
+  "numero_telefone": "555666888"
+}
+```
 
-Criar contato: Adiciona um novo contato à lista telefônica Listar contatos: Exibe todos os contatos cadastrados Buscar contato: Localiza um contato específico por ID Atualizar contato: Modifica informações de um contato existente Excluir contato: Remove um contato da lista
+Resposta:
+```json
+{
+  "id": 3,
+  "nome": "Pedro Silva",
+  "numero_telefone": "555666888"
+}
+```
 
-Funcionalidades Futuras
+**e) Excluir Contato**
 
-Cadastro de usuários Sistema de login e autenticação Níveis de acesso diferenciados Vinculação de listas telefônicas a usuários específicos
+Resposta:
+```json
+{
+  "message": "Usuário excluído com sucesso."
+}
+```
 
-Como Configurar e Executar o Projeto Pré-requisitos
+### 5. Desafios e Soluções
 
-Python 3.6 ou superior Pip (gerenciador de pacotes Python)
+| Desafio | Solução Implementada | Código Exemplo |
+|---------|----------------------|----------------|
+| Tratamento de erros em consultas | Implementação de try/except em controllers | `try: contato = user_model.buscar_contatos_por_id(contato_id)` |
+| Validação de dados | Uso do Pydantic para validação | `class Contato(BaseModel): nome: str` |
+| Arquitetura escalável | Estruturação em camadas MVC | Separação em controllers, models e routes |
+| Retorno adequado de status HTTP | Uso de status_code nos endpoints | `@router.post("/contatos", status_code=201)` |
+| Tratamento de contatos inexistentes | Verificação explícita de resultados nulos | `if contato is None: raise HTTPException(status_code=404...)` |
 
-Instalação
+## 🏗️ Estrutura do Projeto
 
-Clone o repositório: git clone https://github.com/kaua-hiro/lista-telefonica.git cd lista-telefonica
+```
+sistema-contatos/
+├── controllers/
+│   └── contatos_controllers.py    # Lógica para contatos
+│
+├── database/
+│   └── db.py                      # Configurações do banco
+│
+├── models/
+│   └── user_model.py              # Modelo de contatos
+│
+├── routes/
+│   └── rotas.py                   # Rotas da API
+│
+├── templates/                     # Templates para interface web (a ser implementado)
+│
+├── .gitignore                     # Arquivos ignorados pelo git
+├── main.py                        # Aplicação principal
+├── banco.db                       # Banco de dados SQLite
+└── README.md                      # Documentação
+```
 
-Crie um ambiente virtual (opcional, mas recomendado):
+---
 
-Windows
-python -m venv venv venv\Scripts\activate
+## 🔄 Fluxo de Dados
 
-Linux/MacOS
-python -m venv venv source venv/bin/activate
+1. **Requisição** chega à rota correspondente em `rotas.py`
+2. **Controller** processa a requisição em `contatos_controllers.py`
+3. **Model** interage com o banco em `user_model.py`
+4. **Resposta** é retornada em formato JSON com status HTTP apropriado
 
-Instale as dependências: pip install -r requirements.txt Conteúdo sugerido para o arquivo requirements.txt: fastapi>=0.68.0 uvicorn>=0.15.0 pydantic>=1.8.0
+### Diagrama de Sequência
+```
+Cliente HTTP → Rotas → Controllers → Models → Banco SQLite
+                                  ↓
+Cliente HTTP ← Resposta JSON ← Controllers
+```
 
-Inicializando a Aplicação
+---
 
-Certifique-se de que está no diretório raiz do projeto. Execute o comando: uvicorn main:app --reload
+## ✅ Validações Implementadas
 
-O parâmetro main refere-se ao arquivo main.py O parâmetro app refere-se à instância do FastAPI definida nesse arquivo A flag --reload permite que o servidor reinicie automaticamente quando detectar alterações no código
+| Entidade | Campo           | Validações                | Status Error |
+|----------|-----------------|---------------------------|--------------|
+| Contato  | nome            | Obrigatório               | 422 Unprocessable Entity |
+|          | numero_telefone | Obrigatório               | 422 Unprocessable Entity |
 
-A API estará disponível em http://localhost:8000 A documentação automática da API estará disponível em:
+Obs: As validações são aplicadas automaticamente pelo Pydantic e FastAPI.
 
-Swagger UI: http://localhost:8000/docs ReDoc: http://localhost:8000/redoc
+---
 
-Exemplo do Arquivo Principal (main.py) pythonfrom fastapi import FastAPI from rotas import router
+## 📊 Banco de Dados
 
-app = FastAPI( title="API Lista Telefônica", description="API para gerenciamento de contatos telefônicos com arquitetura MVC", version="1.0.0" )
+O sistema utiliza SQLite como banco de dados, com a seguinte estrutura:
 
-Incluindo as rotas da aplicação
-app.include_router(router)
+```sql
+CREATE TABLE IF NOT EXISTS lista_contatos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    numero_telefone TEXT NOT NULL
+)
+```
 
-Cria as tabelas necessárias no banco de dados ao iniciar a aplicação
-@app.on_event("startup") async def startup_event(): from models.user_model import criar_tabela criar_tabela()
+Principais operações no banco:
+- `conectar()`: Estabelece conexão com o banco SQLite
+- `cursor.execute()`: Executa consultas SQL
+- `cursor.fetchall()`: Recupera múltiplos registros
+- `cursor.fetchone()`: Recupera um único registro
+- `cursor.lastrowid`: Obtém o ID do último registro inserido
+- `cursor.rowcount`: Verifica se operações de modificação foram bem-sucedidas
 
-if name == "main": import uvicorn uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) Como Usar a API Endpoints Disponíveis Criar Contato (POST)
+---
 
-Endpoint: /contatos Body (JSON): json{ "nome": "Nome do Contato", "numero_telefone": "123456789" }
+## 🚀 Como Executar
 
-Resposta (200 OK): json{ "id": 1, "nome": "Nome do Contato", "numero_telefone": "123456789" }
+1. **Pré-requisitos**:
+   - Python 3.7+
+   - pip (gerenciador de pacotes do Python)
 
-Listar Todos os Contatos (GET)
+2. **Configuração**:
+   ```bash
+   # Clonar repositório
+   git clone [https://github.com/kaua-hiro/lista_telefonica_fastapi]
+   cd sistema-contatos
+   
+   # Criar ambiente virtual
+   python -m venv venv
+   
+   # Ativar ambiente virtual
+   # Windows:
+   venv\Scripts\activate
+   # Linux/Mac:
+   source venv/bin/activate
+   
+   # Instalar dependências
+   pip install fastapi uvicorn pydantic
+   ```
 
-Endpoint: /contatos Resposta (200 OK): json[ { "id": 1, "nome": "Nome do Contato", "numero_telefone": "123456789" }, { "id": 2, "nome": "Outro Contato", "numero_telefone": "987654321" } ]
+3. **Execução**:
+   ```bash
+   python main.py
+   ```
+   Ou utilize o Uvicorn diretamente:
+   ```bash
+   uvicorn main:app --reload
+   ```
 
-Buscar Contato por ID (GET)
+4. **Acessando o Sistema**:
+   - API: `http://127.0.0.1:8000`
+   - Documentação interativa (gerada automaticamente pelo FastAPI): `http://127.0.0.1:8000/docs`
+   - Interface alternativa de documentação: `http://127.0.0.1:8000/redoc`
 
-Endpoint: /contatos/{id} Resposta (200 OK): json{ "id": 1, "nome": "Nome do Contato", "numero_telefone": "123456789" }
+---
 
-Resposta (404 Not Found): json{ "detail": "Contato não encontrado" }
+## 🧪 Testando a API
 
-Atualizar Contato (PUT)
+Para testar a API, você pode usar:
 
-Endpoint: /contatos/{id} Body (JSON): json{ "nome": "Nome Atualizado", "numero_telefone": "999999999" }
+1. **Swagger UI**: Acesse `http://127.0.0.1:8000/docs` para uma interface interativa onde pode executar todas as operações da API.
 
-Resposta (200 OK): json{ "id": 1, "nome": "Nome Atualizado", "numero_telefone": "999999999" }
+2. **Postman/Insomnia**: Importe os endpoints para testes mais elaborados.
 
-Excluir Contato (DELETE)
+3. **Scripts Python**: Teste programaticamente com bibliotecas como `requests`:
+   ```python
+   import requests
+   
+   # Listar contatos
+   response = requests.get('http://127.0.0.1:8000/contatos')
+   print(response.json())
+   
+   # Criar novo contato
+   data = {"nome": "Teste Automatizado", "numero_telefone": "999888777"}
+   response = requests.post('http://127.0.0.1:8000/contatos', json=data)
+   print(response.json())
+   ```
 
-Endpoint: /contatos/{id} Resposta (200 OK): json{ "message": "Contato excluído com sucesso" }
+---
 
-Testando a API Você pode testar a API usando:
+## 📚 Referências Técnicas
 
-Insomnia ou Postman: Ferramentas gráficas para testar APIs Swagger UI: Disponível em http://localhost:8000/docs Curl: Via linha de comando
+1. **FastAPI**
+   - [Documentação oficial do FastAPI](https://fastapi.tiangolo.com/)
 
-Exemplo de teste com curl: bash# Listar todos os contatos curl -X GET http://localhost:8000/contatos
+2. **SQLite**
+   - [Documentação SQLite](https://www.sqlite.org/docs.html)
 
-Adicionar um contato
-curl -X POST http://localhost:8000/contatos
--H "Content-Type: application/json"
--d '{"nome": "João Silva", "numero_telefone": "123456789"}' Próximos Passos para Implementações Futuras Cadastro de Usuários
+3. **Pydantic**
+   - [Documentação Pydantic](https://pydantic-docs.helpmanual.io/)
 
-Criar modelo de usuários Implementar endpoints para registro e gerenciamento de usuários
+4. **REST API Design**
+   - [Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines)
 
-Autenticação
+5. **Padrão MVC**
+   - [Padrões de Arquitetura de Aplicações Corporativas](https://www.martinfowler.com/books/eaa.html)
 
-Implementar sistema de login simples Adicionar middleware de autenticação Criar sistema de sessões para usuários
+## 👥 Próximos Passos
 
-Controle de Acesso
+- Implementar autenticação de usuários
+- Adicionar mais campos aos contatos (email, endereço, etc.)
+- Implementar sistema de grupos de contatos
+- Adicionar testes automatizados (pytest)
+- Criar interface web com templates Jinja2
+- Implementar validações mais avançadas (formato de telefone, etc.)
+- Adicionar paginação para listagem de contatos
+- Implementar busca e filtros avançados
+- Desenvolver sistema de log para auditoria
 
-Definir níveis de permissão Implementar validação de permissões nos endpoints
+---
 
-Vinculação de Contatos a Usuários
-
-Adicionar campo de usuário_id na tabela de contatos Filtrar contatos por usuário autenticado
-
-Contribuição Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests. Licença Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
+<div align="center">
+  Desenvolvido com Python 🐍 e FastAPI ⚡ 
+</div>
