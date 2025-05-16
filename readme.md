@@ -1,4 +1,4 @@
-# Aula 1 FastAPI
+
 Instalando o Fastapi 
 ```
 pip install "fastapi[standard]"
