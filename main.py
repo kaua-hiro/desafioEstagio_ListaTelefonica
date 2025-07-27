@@ -1,9 +1,17 @@
 from fastapi import FastAPI
-from routes.rotas import router
+from routes import rotas
+from models import user_model
 
-app = FastAPI()
-app.include_router(router)
+user_model.criar_tabela()
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+app = FastAPI(
+    title="API de Lista Telefônica",
+    description="Um projeto de API para gerenciar uma lista de contatos.",
+    version="1.0"
+)
+
+app.include_router(rotas.router)
+
+@app.get("/", tags=["Root"])
+def read_root():
+    return {"message": "Bem-vindo à API de Lista Telefônica!"}

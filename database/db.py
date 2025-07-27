@@ -1,4 +1,8 @@
 import sqlite3
 
-def conectar():
-    return sqlite3.connect("banco.db")
+def get_db():
+    db = sqlite3.connect("banco.db")
+    try:
+        yield db
+    finally:
+        db.close()
