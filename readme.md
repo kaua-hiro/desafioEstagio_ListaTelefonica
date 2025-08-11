@@ -18,7 +18,7 @@ Esta é uma API RESTful para gerenciamento de contatos pessoais, construída com
 ## Próximos Passos (Roadmap)
 
 - [X] **Autenticação de Usuários:** Implementar sistema completo de registro e login com tokens JWT para que cada usuário gerencie apenas seus próprios contatos de forma segura.
-- [ ] **Paginação:** Adicionar sistema de paginação nas rotas de listagem para lidar eficientemente com grandes volumes de dados.
+- [X] **Paginação:** Adicionar sistema de paginação nas rotas de listagem para lidar eficientemente com grandes volumes de dados.
 - [ ] **Busca e Filtros:** Implementar funcionalidades avançadas de busca por contatos através de nome ou parte do número telefônico.
 - [ ] **Frontend:** Desenvolver uma interface de usuário moderna e responsiva com um framework atual (React, Vue) para consumir a API.
 - [ ] **Containerização:** Criar um `Dockerfile` completo para facilitar o processo de deploy e garantir um ambiente de execução consistente.
@@ -101,4 +101,5 @@ Esta é uma API RESTful para gerenciamento de contatos pessoais, construída com
 ## Licença
 
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
 
