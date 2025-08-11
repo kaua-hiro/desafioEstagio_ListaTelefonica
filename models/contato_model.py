@@ -1,10 +1,8 @@
+# models/contato_model.py
+
 import sqlite3
 
 def criar_tabela():
-    """
-    Cria a tabela 'lista_contatos' no banco de dados, se não existir.
-    Agora com a coluna 'owner_id' para vincular a um usuário.
-    """
     conn = sqlite3.connect("banco.db")
     cursor = conn.cursor()
     cursor.execute("""
@@ -19,18 +17,18 @@ def criar_tabela():
     conn.commit()
     conn.close()
 
-def inserir_contato(db: sqlite3.Connection, nome: str, numero_telefone: str) -> int:
+def inserir_contato(db: sqlite3.Connection, nome: str, numero_telefone: str, owner_id: int) -> int:
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO lista_contatos (nome, numero_telefone) VALUES (?, ?)",
-        (nome, numero_telefone)
+        "INSERT INTO lista_contatos (nome, numero_telefone, owner_id) VALUES (?, ?, ?)",
+        (nome, numero_telefone, owner_id)
     )
     db.commit()
     return cursor.lastrowid
 
-def listar_contatos(db: sqlite3.Connection) -> list:
+def listar_contatos(db: sqlite3.Connection, owner_id: int) -> list:
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM lista_contatos")
+    cursor.execute("SELECT id, nome, numero_telefone FROM lista_contatos WHERE owner_id = ?", (owner_id,))
     lista_contatos = cursor.fetchall()
     
     return [
@@ -38,27 +36,27 @@ def listar_contatos(db: sqlite3.Connection) -> list:
         for contato in lista_contatos
     ]
 
-def buscar_contatos_por_id(db: sqlite3.Connection, contato_id: int) -> dict | None:
+def buscar_contato_por_id(db: sqlite3.Connection, contato_id: int, owner_id: int) -> dict | None:
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM lista_contatos WHERE id = ?", (contato_id,))
+    cursor.execute("SELECT id, nome, numero_telefone FROM lista_contatos WHERE id = ? AND owner_id = ?", (contato_id, owner_id))
     contato = cursor.fetchone()
 
     if contato:
         return {"id": contato[0], "nome": contato[1], "numero_telefone": contato[2]}
     return None
 
-def excluir_contatos(db: sqlite3.Connection, contato_id: int) -> bool:
+def excluir_contatos(db: sqlite3.Connection, contato_id: int, owner_id: int) -> bool:
     cursor = db.cursor()
-    cursor.execute("DELETE FROM lista_contatos WHERE id = ?", (contato_id,))
+    cursor.execute("DELETE FROM lista_contatos WHERE id = ? AND owner_id = ?", (contato_id, owner_id))
     campos_afetados = cursor.rowcount
     db.commit()
     return campos_afetados > 0
 
-def atualizar_contatos(db: sqlite3.Connection, contato_id: int, nome: str, numero_telefone: str) -> bool:
+def atualizar_contatos(db: sqlite3.Connection, contato_id: int, nome: str, numero_telefone: str, owner_id: int) -> bool:
     cursor = db.cursor()
     cursor.execute(
-        "UPDATE lista_contatos SET nome = ?, numero_telefone = ? WHERE id = ?",
-        (nome, numero_telefone, contato_id)
+        "UPDATE lista_contatos SET nome = ?, numero_telefone = ? WHERE id = ? AND owner_id = ?",
+        (nome, numero_telefone, contato_id, owner_id)
     )
     campos_afetados = cursor.rowcount
     db.commit()
