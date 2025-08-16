@@ -26,9 +26,14 @@ def inserir_contato(db: sqlite3.Connection, nome: str, numero_telefone: str, own
     db.commit()
     return cursor.lastrowid
 
-def listar_contatos(db: sqlite3.Connection, owner_id: int) -> list:
+# MUDANÇA AQUI
+def listar_contatos(db: sqlite3.Connection, owner_id: int, skip: int = 0, limit: int = 100) -> list:
     cursor = db.cursor()
-    cursor.execute("SELECT id, nome, numero_telefone FROM lista_contatos WHERE owner_id = ?", (owner_id,))
+    # A consulta SQL agora usa LIMIT para definir o tamanho da página e OFFSET para pular os registros
+    cursor.execute(
+        "SELECT id, nome, numero_telefone FROM lista_contatos WHERE owner_id = ? LIMIT ? OFFSET ?",
+        (owner_id, limit, skip)
+    )
     lista_contatos = cursor.fetchall()
     
     return [
