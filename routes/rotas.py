@@ -29,9 +29,10 @@ def pagina_inicial(
     db: sqlite3.Connection = Depends(get_db),
     current_user: user_schema.UserResponse = Depends(get_current_active_user),
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
+    search: str | None = None
 ):
-    return contatos_controllers.mostrar_contatos(db, current_user_id=current_user["id"], skip=skip, limit=limit)
+    return contatos_controllers.mostrar_contatos(db, current_user_id=current_user["id"], skip=skip, limit=limit, search=search)
 
 @router.get("/{contato_id}", response_model=ContatoResponse)
 def contato_por_id(contato_id: int, db: sqlite3.Connection = Depends(get_db), current_user: user_schema.UserResponse = Depends(get_current_active_user)):

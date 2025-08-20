@@ -5,9 +5,9 @@ from fastapi import HTTPException
 from models import contato_model
 
 # MUDANÇA AQUI
-def mostrar_contatos(db: sqlite3.Connection, current_user_id: int, skip: int, limit: int) -> list[dict]:
+def mostrar_contatos(db: sqlite3.Connection, current_user_id: int, skip: int, limit: int, search: str | None) -> list[dict]:
     try:
-        return contato_model.listar_contatos(db, owner_id=current_user_id, skip=skip, limit=limit)
+        return contato_model.listar_contatos(db, owner_id=current_user_id, skip=skip, limit=limit, search=search)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao listar contatos: {str(e)}")
 
