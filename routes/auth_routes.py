@@ -20,6 +20,10 @@ def register_user(usuario: user_schema.UserCreate, db: sqlite3.Connection = Depe
     if db_user:
         raise HTTPException(status_code=400, detail="Email já registrado")
     
+    # MUDANÇA AQUI: Adiciona a validação de senha
+    if len(usuario.password) < 8:
+        raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 8 caracteres")
+    
     novo_usuario = user_model.criar_usuario(db=db, usuario=usuario)
     return novo_usuario
 
